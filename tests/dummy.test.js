@@ -51,7 +51,7 @@ const blogs = [
   }
 ]
 
-test('dummy is called', () => {
+test('dummy returns one', () => {
   const blogs = []
 
   const result = listHelper.dummy(blogs)
@@ -87,7 +87,7 @@ describe('most blogs', () => {
       author: "Robert C. Martin",
       blogAmount: 3
     })
-  })t
+  })
 })
 
 describe('most likes', () => {
