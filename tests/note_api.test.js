@@ -2,6 +2,7 @@
 const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
+const Blog = require('../models/blog')
 
 const api = supertest(app)
 
@@ -56,12 +57,34 @@ const blogs = [
     }
 ]
 
+beforeEach(async () => {
+    await Blog.deleteMany({})
+
+    blogs.forEach(async (blog) => {
+        let blogObject = new Blog(blog)
+        await blogObject.save()
+    })
+})
 
 test('Blog info is returned as json', async () => {
     await api
         .get('/api/blogs')
         .expect(200)
         .expect('Content-Type', /application\/json/)
+})
+
+test('right amount of notes returned', async () => {
+    const response = await api.get('/api/blogs')
+
+    expect(response.body.length).toBe(blogs.length)
+})
+
+test('blog identifiers should be tagged as id', async () => {
+    const response = await api.get('/api/blogs')
+
+    console.log(response.body[0])
+
+    expect(response.body[0].id).toBeDefined()
 })
 
 afterAll(() => {
