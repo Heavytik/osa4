@@ -96,6 +96,75 @@ test('post a blog to server', async () => {
     expect(titles).toContain('Uus juttu')
 })
 
+test('test that likes gets allways a value', async () => {
+    const newBlog1 = {
+        title: 'Uus juttu',
+        author: 'joku',
+        url: 'yle.fi',
+        likes: 5,
+    }
+
+    const newBlog2 = {
+        title: 'Uus juttu2',
+        author: 'joku',
+        url: 'yle.fi',
+    }
+
+    await api
+        .post('/api/blogs')
+        .send(newBlog1)
+        .expect(201)
+        .expect('Content-type', /application\/json/)
+    await api
+        .post('/api/blogs')
+        .send(newBlog2)
+        .expect(201)
+        .expect('Content-type', /application\/json/)
+
+    const response = await api.get('/api/blogs')
+
+    const newBlog1likes = response.body.reduce((prev, cur) => {
+        if (cur.title === newBlog1.title)
+            return cur.likes
+        else
+            return prev
+    }, NaN)
+
+    const newBlog2likes = response.body.reduce((prev, cur) => {
+        if (cur.title === newBlog2.title)
+            return cur.likes
+        else
+            return prev
+    }, NaN)
+
+    expect(newBlog1likes).toBe(newBlog1.likes)
+    expect(newBlog2likes).toBe(0)
+})
+
+test('require title and url', async () => {
+    const newBlogWithoutTitle = {
+        author: 'joku',
+        url: 'yle.fi',
+        likes: 5,
+    }
+
+    const newBlogWithoutUrl = {
+        title: 'Uus juttu',
+        author: 'joku',
+        likes: 5,
+    }
+
+    await api
+        .post('/api/blogs')
+        .send(newBlogWithoutTitle)
+        .expect(400)
+
+    await api
+        .post('/api/blogs')
+        .send(newBlogWithoutUrl)
+        .expect(400)
+})
+
 afterAll(() => {
     mongoose.connection.close()
 })
