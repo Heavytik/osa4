@@ -165,6 +165,34 @@ test('require title and url', async () => {
         .expect(400)
 })
 
+test('try delete a blog', async () => {
+
+    const response1 = await api.get('/api/blogs')
+
+    const firstBlog = response1.body.find(blog => blog.title === blogs[0].title)
+
+    await api.delete(`/api/blogs/${firstBlog.id}`)
+
+    const response2 = await api.get('/api/blogs')
+
+    expect(response2.body.find(e => e.title === blogs[0].title)).not.toBeDefined()
+})
+
+test('try modify a blog', async () => {
+
+    const response1 = await api.get('/api/blogs')
+
+    const firstBlog = response1.body[0]
+
+    await api
+        .patch(`/api/blogs/${firstBlog.id}`)
+        .send({ title: 'Very fun thing' })
+
+    const response2 = await api.get('/api/blogs')
+
+    expect(response2.body.find(e => e.id === firstBlog.id).title).toBe("Very fun thing")
+})
+
 afterAll(() => {
     mongoose.connection.close()
 })

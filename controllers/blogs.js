@@ -32,4 +32,28 @@ blogsRouter.post('/', (request, response) => {
     })
 })
 
+blogsRouter.delete('/:id', (request, response) => {
+
+  Blog
+    .deleteOne({ _id: request.params.id }, (err) => {
+      console.log("Error: ", err)
+    })
+    .then(() => {
+      response.end()
+    })
+
+})
+
+blogsRouter.patch('/:id', (request, response) => {
+
+  const newTitle = {
+    title: request.body.title
+  }
+
+  Blog.findByIdAndUpdate(request.params.id, newTitle, { new: true }).then(
+    response.end()
+  )
+
+})
+
 module.exports = blogsRouter
