@@ -11,6 +11,14 @@ usersRouter.post('/', async (request, response, next) => {
     try {
         const body = request.body
 
+        if (body.password.length < 3 || body.username.length < 3) {
+            response.status(400).send({
+                "error": "Password or username too short"
+            })
+            console.log('bad thing happend')
+            return
+        }
+
         const saltRounds = 10
         const passwordHash = await bcrypt.hash(body.password, saltRounds)
 
@@ -25,6 +33,13 @@ usersRouter.post('/', async (request, response, next) => {
 
         response.json(savedUser)
     } catch (exception) {
+        if (exception.name === 'ValidationError') {
+            response
+                .status(400)
+                .send({
+                    "error": "Excepts `username` to be unique"
+                })
+        }
         next(exception)
     }
 })

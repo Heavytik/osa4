@@ -1,6 +1,12 @@
 
 const User = require('../models/user')
 const helper = require('./test_helper')
+const mongoose = require('mongoose')
+const supertest = require('supertest')
+const app = require('../app')
+
+
+const api = supertest(app)
 
 //...
 
@@ -34,7 +40,7 @@ describe('when there is initially one user at db', () => {
     })
 
     test('creation fails with proper statuscode and message if username already taken', async () => {
-        const usersAtStart = await helper.usersInDb()
+        //const usersAtStart = await helper.usersInDb()
 
         const newUser = {
             username: 'root',
@@ -49,6 +55,38 @@ describe('when there is initially one user at db', () => {
             .expect('Content-Type', /application\/json/)
 
         expect(result.body.error).toContain('`username` to be unique')
+
+        //const usersAtEnd = await helper.usersInDb()
+        //expect(usersAtEnd.length).toBe(usersAtStart.length)
+    })
+
+    test('good response to short password or username', async () => {
+        const usersAtStart = await helper.usersInDb()
+
+        const newUser1 = {
+            username: 'ro',
+            name: 'Superuser',
+            password: 'salainen',
+        }
+
+        const newUser2 = {
+            username: 'root',
+            name: 'Superuser',
+            password: 'sa',
+        }
+
+        const result1 = await api
+            .post('/api/users')
+            .send(newUser1)
+            .expect(400)
+
+        const result2 = await api
+            .post('/api/users')
+            .send(newUser2)
+            .expect(400)
+
+        expect(result1.body.error).toContain('Password or username too short')
+        expect(result2.body.error).toContain('Password or username too short')
 
         const usersAtEnd = await helper.usersInDb()
         expect(usersAtEnd.length).toBe(usersAtStart.length)
