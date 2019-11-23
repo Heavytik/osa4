@@ -1,0 +1,12 @@
+
+
+4.18
+
+Toteuta osan 4 luvun Token-perustainen kirjautuminen tapaan
+järjestelmään token-perustainen autentikointi.
+
+4.19
+
+Muuta blogien lisäämistä siten, että se on mahdollista vain,
+jos lisäyksen tekevässä HTTP POST -pyynnössä on mukana validi
+token. Tokenin haltija määritellään blogin lisääjäksi.

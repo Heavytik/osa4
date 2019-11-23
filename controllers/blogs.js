@@ -1,8 +1,15 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
 const User = require('../models/user')
+const jwt = require('jsonwebtoken')
 
-
+const getTokenFrom = request => {
+  const authorization = request.get('authorization')
+  if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
+    return authorization.substring(7)
+  }
+  return null
+}
 
 blogsRouter.get('/', (request, response) => {
   Blog
@@ -13,39 +20,43 @@ blogsRouter.get('/', (request, response) => {
     })
 })
 
-blogsRouter.post('/', async (request, response) => {
+blogsRouter.post('/', async (request, response, next) => {
 
+  const token = getTokenFrom(request)
   const users = await User.find({})
 
-  const firstUser = users[0]
+  try {
+    const decodedToken = jwt.verify(token, process.env.SECRET)
+    if (!token || !decodedToken.id) {
+      return response.status(401).json({ error: 'token missing or invalid' })
+    }
 
-  const blog = new Blog({
-    title: request.body.title,
-    author: request.body.author,
-    url: request.body.url,
-    likes: request.body.likes || 0,
-    user: firstUser._id
-  })
+    const user = await User.findById(decodedToken.id)
 
+    const blog = new Blog({
+      title: request.body.title,
+      author: request.body.author,
+      url: request.body.url,
+      likes: request.body.likes || 0,
+      user: user._id
+    })
 
+    if (!(blog.title && blog.url)) {
+      response
+        .status(400)
+        .end()
+    }
 
-  if (!(blog.title && blog.url)) {
-    response
-      .status(400)
-      .end()
+    const savedBlog = await blog.save()
+
+    user.blogs = user.blogs.concat(savedBlog._id)
+    await user.save()
+
+    response.status(201).json(savedBlog)
+
+  } catch (exception) {
+    next(exception)
   }
-
-
-
-  const savedBlog = await blog.save()
-  // .then(result => {
-  //   response.status(201).json(result)
-  // })
-
-  firstUser.blogs = firstUser.blogs.concat(savedBlog._id)
-  await firstUser.save()
-
-  response.status(201).json(savedBlog)
 
 })
 
