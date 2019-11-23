@@ -3,14 +3,6 @@ const Blog = require('../models/blog')
 const User = require('../models/user')
 const jwt = require('jsonwebtoken')
 
-const getTokenFrom = request => {
-  const authorization = request.get('authorization')
-  if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
-    return authorization.substring(7)
-  }
-  return null
-}
-
 blogsRouter.get('/', (request, response) => {
   Blog
     .find({})
@@ -22,12 +14,9 @@ blogsRouter.get('/', (request, response) => {
 
 blogsRouter.post('/', async (request, response, next) => {
 
-  const token = getTokenFrom(request)
-  const users = await User.find({})
-
   try {
-    const decodedToken = jwt.verify(token, process.env.SECRET)
-    if (!token || !decodedToken.id) {
+    const decodedToken = jwt.verify(request.token, process.env.SECRET)
+    if (!request.token || !decodedToken.id) {
       return response.status(401).json({ error: 'token missing or invalid' })
     }
 
@@ -60,15 +49,35 @@ blogsRouter.post('/', async (request, response, next) => {
 
 })
 
-blogsRouter.delete('/:id', (request, response) => {
+blogsRouter.delete('/:id', async (request, response, next) => {
 
-  Blog
+  //TODO: Set token with DELETE request (without body)
+
+  /*
+  try {
+    const decodedToken = jwt.verify(request.token, process.env.SECRET)
+    if (!request.token || !decodedToken.id) {
+      return response.status(401).json({ error: 'token missing or invalid' })
+    }
+
+    const user = await User.findById(decodedToken.id)
+
+    if (user._id === request.params.id) {*/
+  await Blog
     .deleteOne({ _id: request.params.id }, (err) => {
       console.log("Error: ", err)
     })
-    .then(() => {
-      response.end()
-    })
+  response.end()
+  /*
+} else {
+  response.status('401').json({
+    error: 'you have no rights to delete this blog'
+  })
+}
+
+} catch (exception) {
+next(exception)
+}*/
 
 })
 
